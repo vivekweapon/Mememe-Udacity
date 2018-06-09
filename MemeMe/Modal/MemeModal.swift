@@ -7,3 +7,14 @@
 //
 
 import Foundation
+import UIKit
+
+struct MemeModal
+{
+    
+    var topText:String = ""
+    var bottomText:String = ""
+    var originalImage:UIImage?
+    var memedImage:UIImage?
+    
+}

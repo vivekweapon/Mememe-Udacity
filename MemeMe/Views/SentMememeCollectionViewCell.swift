@@ -13,4 +13,14 @@ class SentMememeCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var memeImageView: UIImageView!
     
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        // Initialization code
+        
+    }
+    func setUpCell(meMe:MemeModal)
+    {
+        memeImageView.image = meMe.memedImage
+    }
+    
 }

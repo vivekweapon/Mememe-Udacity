@@ -11,93 +11,115 @@ import UIKit
 
 class SentMememeTableViewController:UIViewController {
     
-    var memeModalArr:Array = [MemeModal]()
     @IBOutlet weak var mememeTableView: UITableView!
-    let defaults = UserDefaults.standard
-
-    override func viewDidLoad() {
+   
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    var isModalEmpty:Bool!
+    
+    override func viewDidLoad()
+    {
         super.viewDidLoad()
         
-        //accesing modal data from Userdefaults.
-        
-        if let memeData = defaults.object(forKey: "MemeModal") as? Data {
-            memeModalArr = NSKeyedUnarchiver.unarchiveObject(with: memeData) as! Array<MemeModal>
-        }
-        else {
-            return
-        }
-       //registering tableview with cell
+     //Registering tableview with cell
         mememeTableView.register(UINib(nibName: "SentMememeTableViewCell", bundle: nil), forCellReuseIdentifier: "memeTableViewCell")
         
         let rightBarButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
-        
-        self.navigationItem.rightBarButtonItem = rightBarButton
+        navigationItem.rightBarButtonItem = rightBarButton
 
     }
     
-    //MARK:New Meme Action.
-    @objc func addTapped() {
-        
-         let storyBoard = UIStoryboard(name:"Main",bundle:nil)
+    override func viewWillAppear(_ animated: Bool)
+    {
+        super.viewWillAppear(animated)
       
-         let vc = storyBoard.instantiateViewController(withIdentifier:"MemeVC") as! ViewController
-         vc.isCancelButtonEnabled = true//indicates cancel button is enabled/disabled.
+        if(appDelegate.memeModalArr.count == 0)
+        {
+            self.presentMemeViewController()
+            isModalEmpty = true
+        }
+        else
+        {
+            isModalEmpty = false
+        }
         
+        mememeTableView.reloadData()
+        
+    }
+    
+       func presentMemeViewController()
+    {
+        let storyBoard = UIStoryboard(name:"Main",bundle:nil)
+        let vc = storyBoard.instantiateViewController(withIdentifier:"MemeVC") as! MemeViewController
+        vc.isCancelButtonEnabled = true//indicates cancel button is enabled/disabled.
+       
+        if(isModalEmpty == true)
+        {
+            vc.isCancelButtonEnabled = false
+        }
+        else
+        {
+            vc.isCancelButtonEnabled = true
+        }
+       
         let navController = UINavigationController(rootViewController:vc)
-        self.present(navController, animated: true, completion: nil)
+        present(navController, animated: true, completion: nil)
+    }
+    
+    //MARK: New Meme Action.
+    @objc func addTapped()
+    {
         
+        presentMemeViewController()
     }
 }
 
-extension SentMememeTableViewController:UITableViewDataSource,UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+extension SentMememeTableViewController:UITableViewDataSource,UITableViewDelegate
+{
+    //MARK: DATASOURCE METHODS
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat
+    {
         
-        return 150
+        return 150.0
         
     }
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
+    {
        
-        return memeModalArr.count
+        return appDelegate.memeModalArr.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
+    {
         
         let cell = mememeTableView.dequeueReusableCell(withIdentifier: "memeTableViewCell", for: indexPath) as! SentMememeTableViewCell
-        cell.selectionStyle = UITableViewCellSelectionStyle.none
-        
-        cell.memeImageView.image = memeModalArr[indexPath.row].memedImage
-        cell.descriptionTitle.text = memeModalArr[indexPath.row].topText + "..." + memeModalArr[indexPath.row].bottomText
+        cell.setupCellWith(meMe: appDelegate.memeModalArr[indexPath.row])
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    //MARK: DELEGATE METHODS
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    {
         
         let storyBoard = UIStoryboard(name:"Main",bundle:nil)
         let vc = storyBoard.instantiateViewController(withIdentifier: "DetailMemeVC") as! DetailMememeViewController
-        
         vc.selectedIndex = indexPath.row//this index is passed to ViewController which uses this information to populate the UI.
         vc.hidesBottomBarWhenPushed = true
         
-        self.navigationController?.pushViewController(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: true)
         
     }
     
-     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath)
+     {
         if editingStyle == .delete {
             
-            memeModalArr.remove(at: indexPath.row)//delete object from modalArr
+            appDelegate.memeModalArr.remove(at: indexPath.row)//delete object from modalArr
             mememeTableView.deleteRows(at: [indexPath], with: .fade)//tableView delete
-            
-            //Archving new modal to UserDefaults.
-            let memeData = NSKeyedArchiver.archivedData(withRootObject: memeModalArr)
-            defaults.set(memeData, forKey: "MemeModal")
-            defaults.synchronize()
-            
-            
+        
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
         }
     }
+
 }

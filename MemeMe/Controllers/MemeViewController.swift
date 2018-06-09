@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MemeViewController.swift
 //  MemeMe
 //
 //  Created by Vivekananda Cherukuri on 03/10/2017.
@@ -8,39 +8,40 @@
 
 import UIKit
 
-class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UITextFieldDelegate {
+class MemeViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UITextFieldDelegate
+{
     
     @IBOutlet weak var bottomTextField: UITextField!
     @IBOutlet weak var topTextField: UITextField!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
     @IBOutlet weak var bottomToolBar: UIToolbar!
     @IBOutlet weak var memeImageView: UIImageView!
+    @IBOutlet weak var topTextFieldTopConstarint:NSLayoutConstraint!
     
     
     var picker:UIImagePickerController? = UIImagePickerController()
     var selectedImage = UIImage()
-    var memeModalArr:Array = [MemeModal]()
-    let defaults = UserDefaults.standard
     var shareButton:UIBarButtonItem!
     var cancelButton:UIBarButtonItem!
     var selectIndex:Int!
-    let userDefaults = UserDefaults.standard
     var isCancelButtonEnabled = false
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
 
-    override func viewDidLoad() {
+    override func viewDidLoad()
+    {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        if let memeData = defaults.object(forKey: "MemeModal") as? Data {
-              memeModalArr = NSKeyedUnarchiver.unarchiveObject(with: memeData) as! Array<MemeModal>
-          
-        }
-
-         shareButton = UIBarButtonItem(title: "Share", style: .plain, target: self, action:#selector(self.shareButtonTapped))
+        picker?.delegate = self
+        
+         shareButton
+            = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(self.shareButtonTapped))
         
          cancelButton = UIBarButtonItem(title:"Cancel",style:.plain,target:self,action:#selector(self.cancelButtonTapped))
         
-        if(isCancelButtonEnabled == true)
+        cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+
+        if isCancelButtonEnabled
         {
             cancelButton.isEnabled = true
         }
@@ -49,84 +50,136 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
             cancelButton.isEnabled = false
         }
         
+        configureTextField(textField: topTextField)
+        configureTextField(textField: bottomTextField)
         
-        self.navigationItem.leftBarButtonItem = shareButton
-        self.navigationItem.rightBarButtonItem = cancelButton
-        
-        let memeTextAttributes:[String:Any] = [
-            NSAttributedStringKey.strokeColor.rawValue:UIColor.black,NSAttributedStringKey.foregroundColor.rawValue:UIColor.white,NSAttributedStringKey.font.rawValue: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-            NSAttributedStringKey.strokeWidth.rawValue:-2.0]
-        
-        cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
-       
-        topTextField.defaultTextAttributes = memeTextAttributes
-        bottomTextField.defaultTextAttributes = memeTextAttributes
-        
-        bottomTextField.delegate = self
-        topTextField.delegate = self
-        
-        bottomTextField.textAlignment = NSTextAlignment.center
-        topTextField.textAlignment = NSTextAlignment.center
-        
-    }
+        navigationItem.leftBarButtonItem = shareButton
+        navigationItem.rightBarButtonItem = cancelButton
 
-    override func viewWillAppear(_ animated: Bool) {
+    }
+    
+    override func viewWillAppear(_ animated: Bool)
+    {
         
         super.viewWillAppear(animated)
        
-        //selectedIndex from DetailViewController
         if(selectIndex != nil)
         {
-            memeImageView.image = memeModalArr[selectIndex].originalImage
-            topTextField.text = memeModalArr[selectIndex].topText
-            bottomTextField.text = memeModalArr[selectIndex].bottomText
+
+            memeImageView.image = appDelegate.memeModalArr[selectIndex].originalImage
+            topTextField.text = appDelegate.memeModalArr[selectIndex].topText
+            bottomTextField.text = appDelegate.memeModalArr[selectIndex].bottomText
+            selectIndex = nil
+            
+        }
+        
+        if(appDelegate.memeModalArr.count == 0)
+        {
+            cancelButton.isEnabled = false
+        }
+        else
+        {
+            cancelButton.isEnabled = true
         }
         
         subscribeToKeyboardNotifications()
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool)
+    {
         
         super.viewWillDisappear(animated)
+        
         isCancelButtonEnabled = false
         unsubscribeFromKeyboardNotifications()
+        
     }
     
+    deinit
+   {
+       memeImageView.image = nil
+   }
     
-   
+    func configureTextField(textField: UITextField)
+    {
+        
+        let memeTextAttributes:[String:Any] = [
+            NSAttributedStringKey.strokeColor.rawValue:UIColor.black,NSAttributedStringKey.foregroundColor.rawValue:UIColor.white,NSAttributedStringKey.font.rawValue: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
+            NSAttributedStringKey.strokeWidth.rawValue:-2.0]
+        
+        textField.defaultTextAttributes = memeTextAttributes
+        textField.delegate = self
+        textField.textAlignment = NSTextAlignment.center
+    }
     
     
     //MARK:Keyboard observers
     
-    func subscribeToKeyboardNotifications() {
+    func subscribeToKeyboardNotifications()
+    {
         
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
-        
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+        
     }
     
-    func unsubscribeFromKeyboardNotifications() {
+    func unsubscribeFromKeyboardNotifications()
+    {
         
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
         NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
     }
     
     //MARK:Keyboard notifications.
-    @objc func keyboardWillShow(_ notification:Notification) {
+    @objc func keyboardWillShow(_ notification:Notification)
+    {
         
-        if(bottomTextField.isFirstResponder == true) {
-            view.frame.origin.y -= getKeyboardHeight(notification)
+        if UIDevice.current.orientation == UIDeviceOrientation.landscapeLeft
+        {
+            
+            if(bottomTextField.isFirstResponder == true)
+            {
+                view.frame.origin.y -=
+                    
+                getKeyboardHeight(notification)/2
+                
+            }
             
         }
+        else if UIDevice.current.orientation == UIDeviceOrientation.landscapeRight
+        {
+            
+            if(bottomTextField.isFirstResponder == true)
+          {
+                view.frame.origin.y -=
+                
+                getKeyboardHeight(notification)/2
+                
+           }
+        }
         
+        else
+        {
+            if(bottomTextField.isFirstResponder == true)
+            {
+                view.frame.origin.y -=
+                    
+                    getKeyboardHeight(notification)
+                
+            }
+        }
     }
     
-    @objc func keyboardWillHide(_ notification:Notification) {
+    @objc func keyboardWillHide(_ notification:Notification)
+    {
         
-        view.frame.origin.y = 0
+        view.frame.origin.y = 0.0
+
     }
     
-    func getKeyboardHeight(_ notification:Notification) -> CGFloat {
+    //MARK:Get keyboard Height.
+    func getKeyboardHeight(_ notification:Notification) -> CGFloat
+    {
         
         let userInfo = notification.userInfo
         let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue // of CGRect
@@ -134,58 +187,85 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
     }
 
     //MARK: Camera or Album action methods.
-    @IBAction func openCameraButtonTapped(_ sender: Any) {
+    @IBAction func openCameraButtonTapped(_ sender: Any)
+    {
        
-        self.setSourceType(sourcetype: .camera)
+        setSourceType(sourcetype: .camera)
 
     }
     
-    @IBAction func showAlbumTapped(_ sender: Any) {
+    @IBAction func showAlbumTapped(_ sender: Any)
+    {
       
-        self.setSourceType(sourcetype: .photoLibrary)
+        setSourceType(sourcetype: .photoLibrary)
         
     }
     
     func setSourceType(sourcetype:UIImagePickerControllerSourceType)
     {
-        picker?.delegate = self
         picker?.sourceType = sourcetype
+        picker?.allowsEditing = false
+
+        if(sourcetype == .camera) {
+            picker?.sourceType = sourcetype
+            picker?.cameraCaptureMode = .photo
+            picker?.modalPresentationStyle = .fullScreen
+        }
+        else
+        {
+            picker?.sourceType = .photoLibrary
+            picker?.mediaTypes = UIImagePickerController.availableMediaTypes(for: .photoLibrary)!
+        }
         present(picker!, animated: true, completion: nil)
 
      }
     
     
     //MARK:Barbuttonitem action methods.
-    @objc func shareButtonTapped() {
+    @objc func shareButtonTapped()
+    {
         
-        let activityVC = UIActivityViewController(activityItems: [generateMemedImage()], applicationActivities: nil)
-        //Excluded Activities
-        activityVC.excludedActivityTypes = [UIActivityType.airDrop, UIActivityType.addToReadingList]
-        activityVC.completionWithItemsHandler = { (activityType: UIActivityType?, completed: Bool, returnedItems: [Any]?, error: Error?) -> Void in
-            if completed == true {
-                
-                let storyBoard = UIStoryboard(name:"Main",bundle:nil)
-                let tabBarVC = storyBoard.instantiateViewController(withIdentifier: "TabBarController") as! UITabBarController
-                
-                let appDelegate = UIApplication.shared.delegate as! AppDelegate
-                appDelegate.window?.rootViewController = tabBarVC
-            }
-        }
-        
-        self.present(activityVC, animated: true, completion: nil)
-        self.save()
+        if(memeImageView.image != nil)
+        {
+            let activityVC = UIActivityViewController(activityItems: [generateMemedImage()], applicationActivities: nil)
+            //Excluded Activities
+            activityVC.excludedActivityTypes = [UIActivityType.airDrop, UIActivityType.addToReadingList]
+            activityVC.completionWithItemsHandler = { (activityType: UIActivityType?, completed: Bool, returnedItems: [Any]?, error: Error?) -> Void in
+                if completed == true {
+                    
+                    self.save()//append to ModalArr.This is called after share activtiy is completed as it is in completion handler of the activity view.
 
+                }
+            }
+            
+            present(activityVC, animated: true, completion: nil)
+        }
+       
+        else
+        {
+            let alert = UIAlertController(title: "Error", message: "Please choose an image.", preferredStyle: .alert)
+
+            let errorAction = UIAlertAction(
+            title: "OK", style: UIAlertActionStyle.default) { (action) in
+                
+            }
+            
+            alert.addAction(errorAction)
+            present(alert, animated: true, completion: nil)
+        }
         
     }
     
-   @objc func cancelButtonTapped() {
-    
-        self.dismiss(animated: true, completion: nil)
-    
-}
+    @objc func cancelButtonTapped()
+    {
+
+        dismiss(animated: true, completion: nil)
+    }
     
    //MARK:Image picker delegate methods.
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController)
+    {
        
         dismiss(animated: true, completion: nil)
         
@@ -194,70 +274,64 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate,UINavigat
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any])
     {
         
-        if let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
-            memeImageView.image = selectedImage
-            
+        if let selectedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
+        {
+            performUIUpdatesOnMain {
+                
+                self.memeImageView.image = selectedImage
+
             }
+            
+            
+        }
         
         dismiss(animated: true, completion: nil)
         
     }
     
     //MARK:Textfield delegate methods.
-    func textFieldDidBeginEditing(_ textField: UITextField) {
+    func textFieldDidBeginEditing(_ textField: UITextField)
+    {
         textField.text = ""
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool
+    {
         
         textField.resignFirstResponder()
         return true
     }
     
     //MARK:Save
-    func save() {
-        // Create the meme.
-       
-        let meMe = MemeModal(topTextField.text!,bottomTextField.text!,memeImageView.image!,generateMemedImage())
-      
-        //Checking if ModalArr has any Memes.If Memes exist then appends the new meme to MemeModalArr and then Archives the array and saves it userdefaults.
-        if memeModalArr.count > 0 {
+    func save()
+    {
+        // Create the meMe.Meme will never be nil because we show an alert when image is not selected.
+        
+        let meMe = MemeModal(topText: topTextField.text!, bottomText: bottomTextField.text!, originalImage: memeImageView.image!, memedImage: generateMemedImage())
+            appDelegate.memeModalArr.append(meMe)
+        
+        dismiss(animated: true, completion: nil)
 
-            memeModalArr.append(meMe)
-
-            let memeData = NSKeyedArchiver.archivedData(withRootObject: memeModalArr)
-            userDefaults.set(memeData, forKey: "MemeModal")
-            userDefaults.synchronize()
-
-        }
-        else
-        {
-            //when ModalArray is Empty creates an empty array which holds Meme Modal Objects.appends first meme modal object to empty modal array and archives it and saves to userdefaults.
-            var modalArray = [MemeModal]()
-            modalArray.append(meMe)
-            let memeData = NSKeyedArchiver.archivedData(withRootObject: modalArray)
-
-            userDefaults.set(memeData, forKey: "MemeModal")
-            userDefaults.synchronize()
-
-        }
 
     }
-    
-        func generateMemedImage() -> UIImage {
+    //MARK:Genearte Meme Image
+    func generateMemedImage() -> UIImage
+    {
             
-            self.navigationController?.isNavigationBarHidden = true
-            self.bottomToolBar.isHidden = true
+            navigationController?.isNavigationBarHidden = true
+            bottomToolBar.isHidden = true
             // Render view to an image
             UIGraphicsBeginImageContext(self.view.frame.size)
+        
             view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
+        
             let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        
             UIGraphicsEndImageContext()
-            
-            
-            self.navigationController?.isNavigationBarHidden = false
-            self.bottomToolBar.isHidden = false
-            
+        
+            navigationController?.isNavigationBarHidden = false
+            bottomToolBar.isHidden = false
             return memedImage
-        }
+            
+    }
 }

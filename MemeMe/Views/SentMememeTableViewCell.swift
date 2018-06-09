@@ -15,9 +15,15 @@ class SentMememeTableViewCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
-        
+        selectionStyle = UITableViewCellSelectionStyle.none
+
     }
     
-
+    func setupCellWith(meMe:MemeModal)
+    {
+        
+        memeImageView.image = meMe.memedImage
+        descriptionTitle.text = meMe.topText + "..." + meMe.bottomText
+    }
 
 }
