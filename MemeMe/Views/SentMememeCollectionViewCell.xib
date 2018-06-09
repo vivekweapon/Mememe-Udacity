@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SentMememeCollectionViewCell" customModule="MemeMe" customModuleProvider="target"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="c1J-VP-OT3" customClass="SentMememeCollectionViewCell" customModule="MemeMe" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO">
+                <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="J2k-gQ-pRJ">
+                        <rect key="frame" x="0.0" y="0.0" width="150" height="150"/>
+                    </imageView>
+                </subviews>
+            </view>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="J2k-gQ-pRJ" secondAttribute="bottom" id="2hM-OH-WVo"/>
+                <constraint firstItem="J2k-gQ-pRJ" firstAttribute="leading" secondItem="c1J-VP-OT3" secondAttribute="leading" id="3ro-lL-tpn"/>
+                <constraint firstAttribute="trailing" secondItem="J2k-gQ-pRJ" secondAttribute="trailing" id="DuF-d0-9zj"/>
+                <constraint firstItem="J2k-gQ-pRJ" firstAttribute="top" secondItem="c1J-VP-OT3" secondAttribute="top" id="gLC-HE-wQ1"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="li4-hb-XAI"/>
+            <size key="customSize" width="93" height="80"/>
+            <connections>
+                <outlet property="memeImageView" destination="J2k-gQ-pRJ" id="eMX-jo-lHk"/>
+            </connections>
+            <point key="canvasLocation" x="95.5" y="-160"/>
+        </collectionViewCell>
+    </objects>
+</document>
